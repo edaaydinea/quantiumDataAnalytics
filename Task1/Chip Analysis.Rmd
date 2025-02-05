@@ -1,5 +1,6 @@
 ---
 title: "Quantium Virtual Internship - Retail Strategy and Analytics - Task 1"
+author: "Eda AYDIN"
 output: pdf_document
 ---
 
