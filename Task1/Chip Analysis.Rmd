@@ -1,0 +1,220 @@
+---
+title: "Quantium Virtual Internship - Retail Strategy and Analytics - Task 1"
+output: pdf_document
+---
+
+## Load required libraries
+
+```{r}
+library(readxl)
+library(dplyr)
+library(data.table)
+```
+
+## Define File Path and Load Data
+
+```{r}
+filePath <- ""  # Set working directory
+# read excel file
+transactions <- readxl::read_excel(paste0(filePath, "QVI_transaction_data.xlsx"))
+customers <- fread(paste0(filePath, "QVI_purchase_behaviour.csv"))
+```
+
+## Display the data
+
+```{r}
+head(transactions)
+```
+
+```{r}
+head(customers)
+```
+
+## Summary Statistics
+
+```{r}
+summary(transactions)
+```
+
+```{r}
+summary(customers)
+```
+
+```{r}
+# number of rows
+nrow(transactions)
+```
+
+```{r}
+nrow(customers)
+```
+
+## Variables Description
+
+The transaction data contains the following variables:
+
+-   **DATE**: Date of purchase
+-   **STORE_NBR**: Store number
+-   **LYLTY_CARD_NBR**: Customer loyalty card number
+-   **TXN_ID**: Transaction ID
+-   **PROD_NBR**: Product number
+-   **PROD_NAME**: Product name
+-   **PROD_QTY**: Quantity of product purchased
+-   **TOT_SALES**: Total sales (\$)
+
+The customer data contains the following variables:
+
+-   **LYLTY_CARD_NBR**: Customer loyalty card number
+-   **LIFESTAGE**: Customer lifestage
+-   **PREMIUM_CUSTOMER**: Customer premium status
+
+## Data Cleaning
+
+### Missing Values
+
+```{r}
+colSums(is.na(transactions))
+```
+
+```{r}
+colSums(is.na(customers))
+```
+
+### Fix the type
+
+```{r}
+transactions$DATE <- as.Date(transactions$DATE, origin="1899-12-30")
+head(transactions)
+```
+
+### Outlier Detection
+
+```{r}
+hist(transactions$TOT_SALES, main="Histogram of Total Sales", xlab="Total Sales ($)")
+```
+
+```{r}
+# remove outliers
+q1 <- quantile(transactions$TOT_SALES, 0.25, na.rm = TRUE)  # First quartile
+q3 <- quantile(transactions$TOT_SALES, 0.75, na.rm = TRUE)  # First quartile
+IQR <- q3 - q1
+
+lower_bound <- q1 - 1.5 * IQR
+upper_bound <- q3 + 1.5 * IQR
+
+transactions <- transactions[transactions$TOT_SALES <= upper_bound, ]
+```
+
+```{r}
+hist(transactions$TOT_SALES, main="Histogram of Total Sales", xlab="Total Sales ($)")
+```
+
+# Merge data
+
+```{r}
+merged_data <- merge(transactions, customers, by="LYLTY_CARD_NBR")
+head(merged_data)
+```
+
+# Exploratory Data Analysis
+
+```{r}
+# Analyze the young singles/couples
+young_singles_couples <- merged_data %>% filter(LIFESTAGE %in% c("YOUNG SINGLES/COUPLES"))
+head(young_singles_couples)
+```
+
+```{r}
+summary(young_singles_couples)
+str(young_singles_couples)
+```
+
+```{r}
+sum(young_singles_couples$TOT_SALES, na.rm = TRUE)
+```
+
+```{r}
+hist(young_singles_couples$TOT_SALES, main="Histogram of Total Sales for Young Singles/Couples", xlab="Total Sales ($)")
+```
+
+```{r}
+# Summarize total sales by product name
+product_sales <- young_singles_couples %>%
+  group_by(PROD_NAME) %>%
+  summarise(Total_Sales = sum(TOT_SALES, na.rm = TRUE)) %>%
+  arrange(desc(Total_Sales))  # Optional: Sort by total sales in descending order
+head(product_sales)
+```
+
+```{r}
+# Summarize total sales by premium status
+premium_status_sales <- young_singles_couples %>%
+        group_by(PREMIUM_CUSTOMER) %>%
+        summarize(Total_sales = sum(TOT_SALES, na.rm = TRUE)) %>%
+        arrange(desc(Total_sales))  # Optional: Sort by total sales in descending order
+premium_status_sales
+
+# Barplot for total sales by premium status
+barplot(premium_status_sales$Total_sales, names.arg = premium_status_sales$PREMIUM_CUSTOMER, main = "Total Sales by Premium Status for Young Singles/Couples", xlab = "Premium Status", ylab = "Total Sales ($)", col = "skyblue")
+```
+
+```{r}
+# Sample Mainstream Customers
+mainstream_customers <- young_singles_couples[young_singles_couples$PREMIUM_CUSTOMER == "Mainstream", ]
+
+# Summarize total sales by product name for mainstream customers
+product_sales <- mainstream_customers %>%
+  group_by(PROD_NAME) %>%
+  summarise(Total_Sales = sum(TOT_SALES, na.rm = TRUE)) %>%
+  arrange(desc(Total_Sales))  # Optional: Sort by total sales in descending order
+head(product_sales)
+```
+
+```{r}
+# Sample Mainstream Customers
+budget_customers <- young_singles_couples[young_singles_couples$PREMIUM_CUSTOMER == "Budget", ]
+
+# Summarize total sales by product name for mainstream customers
+product_sales <- budget_customers %>%
+  group_by(PROD_NAME) %>%
+  summarise(Total_Sales = sum(TOT_SALES, na.rm = TRUE)) %>%
+  arrange(desc(Total_Sales))  # Optional: Sort by total sales in descending order
+head(product_sales)
+```
+
+```{r}
+# Sample Mainstream Customers
+premium_customers <- young_singles_couples[young_singles_couples$PREMIUM_CUSTOMER == "Premium", ]
+
+# Summarize total sales by product name for mainstream customers
+product_sales <- premium_customers %>%
+  group_by(PROD_NAME) %>%
+  summarise(Total_Sales = sum(TOT_SALES, na.rm = TRUE)) %>%
+  arrange(desc(Total_Sales))  # Optional: Sort by total sales in descending order
+head(product_sales)
+```
+
+```{r}
+library(ggplot2)
+library(data.table)
+
+#### Aggregate Sales Data
+sales_summary <- merged_data %>%
+  group_by(LIFESTAGE, PREMIUM_CUSTOMER) %>%
+  summarise(Total_Sales = sum(TOT_SALES, na.rm = TRUE))
+
+#### Plot Total Sales by Customer Segment
+ggplot(sales_summary, aes(x = LIFESTAGE, y = Total_Sales, fill = PREMIUM_CUSTOMER)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  geom_col(position = "dodge") +
+  labs(title = "Total Sales by Customer Segment", x = "Lifestage", y = "Total Sales")
+```
+
+```{r}
+t_test <- t.test(
+  merged_data$TOT_SALES[merged_data$PREMIUM_CUSTOMER == "Mainstream" & merged_data$LIFESTAGE == "YOUNG SINGLES/COUPLES"],
+  merged_data$TOT_SALES[merged_data$PREMIUM_CUSTOMER == "Premium" & merged_data$LIFESTAGE == "YOUNG SINGLES/COUPLES"]
+)
+  
+print(t_test)
+```
