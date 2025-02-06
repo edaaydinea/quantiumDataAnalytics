@@ -7,6 +7,12 @@ This repository contains the Quantium Data Analytics Virtual Internship program 
 3. **Task 3: Analytics and commercial application**
 
 ## Table of Contents
+  
+- [Quantium - Data Analytics Virtual Internship](#quantium---data-analytics-virtual-internship)
+  - [Table of Contents](#table-of-contents)
+  - [Task 1: Data Preparation and Customer Analytics](#task-1-data-preparation-and-customer-analytics)
+  - [Task 2: Experimentation and Uplift Testing](#task-2-experimentation-and-uplift-testing)
+  - [Task 3: Analytics and Commercial Application](#task-3-analytics-and-commercial-application)
 
 ## Task 1: Data Preparation and Customer Analytics
 
